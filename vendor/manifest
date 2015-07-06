@@ -1,0 +1,17 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/lib/pq",
+			"repository": "https://github.com/lib/pq",
+			"revision": "dc50b6ad2d3ee836442cf3389009c7cd1e64bb43",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/julienschmidt/httprouter",
+			"repository": "https://github.com/julienschmidt/httprouter",
+			"revision": "70708e46004c7bcb09b70e685a8b74a690135387",
+			"branch": "master"
+		}
+	]
+}
