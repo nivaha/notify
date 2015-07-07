@@ -30,6 +30,13 @@ $ gb build
 
 You can get help by typing `./bin/notify -h`
 
+Editor
+==
+If you are using the Atom editor, we recommend using `go-plus` package
+```sh
+$ apm install go-plus
+```
+
 Project Status
 ==
 Doesn't really do anything yet - just set up for talking to the db and for handling routing.
