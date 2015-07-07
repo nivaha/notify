@@ -25,7 +25,7 @@ func dbConnectURL(info dbAccess) string {
 		info.databaseName)
 }
 
-func dbOpen() {
+func dbOpen() *sql.DB {
 	url := dbConnectURL(clOptions.dbInfo)
 	log.Println("Connecting to:", url)
 
@@ -33,8 +33,13 @@ func dbOpen() {
 
 	db, err = sql.Open("postgres", url)
 	fatalIfError(err)
-	defer db.Close()
 
 	err = db.Ping()
 	fatalIfError(err)
+
+	return db
+}
+
+func dbClose() {
+	db.Close()
 }

@@ -1,9 +1,12 @@
-package main
+package router
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+
+	"notify/event"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -18,16 +21,19 @@ func hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	fmt.Fprintf(w, "Hey, %s!\n", ps.ByName("name"))
 }
 
-func setupRoutes() {
+func Setup(db *sql.DB) {
 	router = httprouter.New()
 
 	router.GET("/", index)
 	router.GET("/hello/:name", hello)
+
+	router.GET("/events", event.Index)
+	router.POST("/event", event.Create)
 }
 
-func startRouter() {
-	log.Printf("Listening on port %v", clOptions.httpPort)
+func Start(port int) {
+	log.Printf("Listening on port %v", port)
 
-	port := fmt.Sprintf(":%v", clOptions.httpPort)
-	log.Fatal(http.ListenAndServe(port, router))
+	portStr := fmt.Sprintf(":%v", port)
+	log.Fatal(http.ListenAndServe(portStr, router))
 }
