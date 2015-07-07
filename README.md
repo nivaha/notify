@@ -10,9 +10,10 @@ The project uses go 1.4.x is set up to use [gb](https://github.com/constabulary/
 $ brew install go
 ```
 
-Next, make sure that your **GOPATH** environment variable is set and that its bin is added to your **PATH**:
+Next, make sure that your **GOPATH** environment variable is set in your **.bash_profile** and that its bin directory is added to your **PATH**:
 
 ```sh
+# add to your .bash_profile
 export GOPATH="${HOME}/devdt/go"
 export PATH="${GOPATH}/bin:${PATH}"
 ```
