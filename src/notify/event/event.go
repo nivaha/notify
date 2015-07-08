@@ -2,7 +2,6 @@ package event
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,15 +12,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type JSONB map[string]interface{}
-
 type Event struct {
 	ID                string    `json:"id"`
 	EventType         string    `json:"event_type"`
 	Context           string    `json:"context"`
 	OriginalAccountID string    `json:"original_account_id"`
 	CreatedAt         time.Time `json:"timestamp"`
-	Data              JSONB     `json:"payload"`
+	Data              string    `json:"payload"`
 }
 
 var myDB *sql.DB
@@ -42,12 +39,14 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	for rows.Next() {
 		var e Event
+		var data string
 
-		err := rows.Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &e.CreatedAt, &e.Data)
+		err := rows.Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &e.CreatedAt, &data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		e.Data = data
 
 		events = append(events, e)
 	}
@@ -101,8 +100,8 @@ func New(db *sql.DB) error {
               event_type VARCHAR(64),
               context VARCHAR(64),
               original_account_id VARCHAR(64),
-              created_at TIMESTAMP,
-              data JSONB)`
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              data JSON DEFAULT '{}'::json)`
 
 	_, err = db.Exec(create)
 
@@ -114,30 +113,12 @@ func prepareStatements() error {
 
 	prepStmts.insert, err = myDB.Prepare(`INSERT INTO events
     ( id,
-      event_type ,
-      context ,
-      original_account_id,
-      created_at
+      event_type,
+      context,
+      original_account_id
       )
-    VALUES ( uuid_generate_v4(), $1, $2, $3, CURRENT_TIMESTAMP )
+    VALUES ( uuid_generate_v4(), $1, $2, $3 )
   `)
 
 	return err
-}
-
-func (j JSONB) Value() (driver.Value, error) {
-	valueString, err := json.Marshal(j)
-	return string(valueString), err
-}
-
-func (j *JSONB) Scan(value interface{}) error {
-	if value == nil {
-		return nil
-	}
-
-	if err := json.Unmarshal(value.([]byte), &j); err != nil {
-		return err
-	}
-
-	return nil
 }
