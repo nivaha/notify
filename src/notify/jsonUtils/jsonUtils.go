@@ -2,7 +2,6 @@ package jsonUtils
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -12,33 +11,25 @@ type jsonError struct {
 }
 
 func Output(w http.ResponseWriter, httpStatus int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-
 	eJSON, err := json.Marshal(data)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("{\"http-status\": 500, \"message\":\"Internal Error\"}"))
+		write500Error(w)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
 	w.Write(eJSON)
 }
 
 func Error(w http.ResponseWriter, httpStatus int, errorStr string) {
-	w.Header().Set("Content-Type", "application/json")
-
 	data := jsonError{httpStatus, errorStr}
 
-	mapB, err := json.Marshal(data)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("{\"http-status\": 500, \"message\":\"Internal Error\"}"))
-		return
-	}
+	Output(w, httpStatus, data)
+}
 
-	log.Printf(string(mapB))
-
-	w.WriteHeader(httpStatus)
-	w.Write(mapB)
+func write500Error(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte("{\"http-status\": 500, \"message\":\"Internal Error\"}"))
 }
