@@ -16,6 +16,7 @@ func Output(w http.ResponseWriter, httpStatus int, data interface{}) {
 
 	eJSON, err := json.Marshal(data)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("{\"http-status\": 500, \"message\":\"Internal Error\"}"))
 		return
 	}
@@ -31,6 +32,7 @@ func Error(w http.ResponseWriter, httpStatus int, errorStr string) {
 
 	mapB, err := json.Marshal(data)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("{\"http-status\": 500, \"message\":\"Internal Error\"}"))
 		return
 	}
