@@ -25,13 +25,13 @@ func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&e)
 	if err != nil {
-		jsonUtils.Error(w, http.StatusBadRequest, "Could not decode request")
+		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = e.insert()
 	if err != nil {
-		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
+		jsonUtils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -41,7 +41,7 @@ func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 func Show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	e, err := lookup(ps.ByName("id"))
 	if err != nil {
-		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
+		jsonUtils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
