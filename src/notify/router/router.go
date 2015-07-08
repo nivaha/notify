@@ -29,6 +29,7 @@ func Setup(db *sql.DB) {
 
 	router.GET("/events", event.Index)
 	router.POST("/event", event.Create)
+	router.GET("/event/:id", event.Show)
 }
 
 func Start(port int) {

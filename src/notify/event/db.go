@@ -4,6 +4,7 @@ import "database/sql"
 
 var myDB *sql.DB
 var prepStmts struct {
+	lookup *sql.Stmt
 	insert *sql.Stmt
 }
 
@@ -56,6 +57,19 @@ func list() ([]Event, error) {
 	return events, err
 }
 
+func lookup(id string) (Event, error) {
+	var e Event
+	var data string
+
+	err := prepStmts.lookup.QueryRow(id).Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &e.CreatedAt, &data)
+	if err != nil {
+		return Event{}, err
+	}
+	e.Data = data
+
+	return e, err
+}
+
 func (e Event) insert() error {
 	_, err := prepStmts.insert.Exec(e.EventType, e.Context, e.OriginalAccountID)
 
@@ -64,6 +78,14 @@ func (e Event) insert() error {
 
 func prepareStatements() error {
 	var err error
+
+	prepStmts.lookup, err = myDB.Prepare(`SELECT * FROM events
+      WHERE id = $1
+    `)
+
+	if err != nil {
+		return err
+	}
 
 	prepStmts.insert, err = myDB.Prepare(`INSERT INTO events
     ( id,
