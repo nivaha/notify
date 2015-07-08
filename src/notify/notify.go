@@ -33,7 +33,7 @@ func main() {
 	db := dbOpen()
 	defer dbClose()
 
-	err := event.New(db)
+	err := event.CreateDB(db)
 	fatalIfError(err)
 
 	router.Setup(db)
