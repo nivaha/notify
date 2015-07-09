@@ -20,7 +20,7 @@ func CreateDB(db *sql.DB) error {
                 id UUID PRIMARY KEY,
                 event_type VARCHAR(64),
                 context VARCHAR(64),
-                account_id VARCHAR(64),
+                account_id UUID,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
               `)
 	if err != nil {
@@ -76,8 +76,8 @@ func list() ([]Subscription, error) {
 	return subscriptions, err
 }
 
-func (subscription Subscription) insert() error {
-	_, err := prepStmts.insert.Exec(subscription.EventType, subscription.Context, subscription.AccountID)
+func (subscription *Subscription) insert() error {
+	err := prepStmts.insert.QueryRow(subscription.EventType, subscription.Context, subscription.AccountID).Scan(&subscription.ID, &subscription.CreatedAt)
 
 	return err
 }
@@ -107,6 +107,7 @@ func prepareStatements() error {
       account_id
     )
     VALUES ( uuid_generate_v4(), $1, $2, $3 )
+		RETURNING id, created_at
   `)
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@ package subscription
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"notify/jsonUtils"
 
@@ -26,11 +25,7 @@ func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	subscriptionJSON, _ := json.Marshal(subscription)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
-	fmt.Fprintf(w, "%v", string(subscriptionJSON))
+	jsonUtils.Output(w, 201, subscription)
 }
 
 // Index is a REST API for listing all registered subscriptions
@@ -41,13 +36,7 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	fmt.Fprint(w, "index of subscriptions\n")
-	for i := range subscriptions {
-		fmt.Fprintf(w, "Subscription %v\n", subscriptions[i])
-	}
+	jsonUtils.Output(w, 200, subscriptions)
 }
 
 // Show is a REST API for listing a single subscription, found by id
@@ -58,11 +47,7 @@ func Show(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	fmt.Fprint(w, "single subscription\n")
-	fmt.Fprintf(w, "%v\n", subscription)
+	jsonUtils.Output(w, 200, subscription)
 }
 
 // Destroy is a REST API for destroying an subscription, based on the subscription id
@@ -73,9 +58,5 @@ func Destroy(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
-
-	fmt.Fprintf(w, "Looking to destroy a subscription\n")
-	fmt.Fprintf(w, "%v\n", subscription)
+	jsonUtils.Output(w, 200, subscription)
 }
