@@ -8,6 +8,7 @@ import (
 
 	"notify/event"
 	"notify/router"
+	"notify/subscription"
 )
 
 var clOptions struct {
@@ -33,8 +34,8 @@ func main() {
 	db := dbOpen()
 	defer dbClose()
 
-	err := event.CreateDB(db)
-	fatalIfError(err)
+	fatalIfError(event.CreateDB(db))
+	fatalIfError(subscription.CreateDB(db))
 
 	router.Setup(db)
 	router.Start(clOptions.httpPort)
