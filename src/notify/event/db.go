@@ -4,22 +4,25 @@ import "database/sql"
 
 var myDB *sql.DB
 var prepStmts struct {
+	list   *sql.Stmt
 	lookup *sql.Stmt
 	insert *sql.Stmt
 }
 
+// CreateDB creates the events table if it does not yet exist
 func CreateDB(db *sql.DB) error {
 	myDB = db
 
 	_, err := myDB.Exec(`
               CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
               CREATE TABLE IF NOT EXISTS events (
-                id UUID PRIMARY KEY NOT NULL,
-                event_type VARCHAR(64),
-                context VARCHAR(64),
-                original_account_id VARCHAR(64),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                data JSON DEFAULT '{}'::json)
+								id UUID PRIMARY KEY NOT NULL,
+								event_type VARCHAR(64),
+								context VARCHAR(64),
+								original_account_id UUID,
+								data JSON DEFAULT '{}'::json,
+								created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
               `)
 	if err != nil {
 		return err
@@ -31,7 +34,7 @@ func CreateDB(db *sql.DB) error {
 }
 
 func list() ([]Event, error) {
-	rows, err := myDB.Query("SELECT * FROM events")
+	rows, err := prepStmts.list.Query()
 
 	if err != nil {
 		return nil, err
@@ -44,7 +47,7 @@ func list() ([]Event, error) {
 		var e Event
 		var data string
 
-		err := rows.Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &e.CreatedAt, &data)
+		err := rows.Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &data, &e.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -61,7 +64,7 @@ func lookup(id string) (Event, error) {
 	var e Event
 	var data string
 
-	err := prepStmts.lookup.QueryRow(id).Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &e.CreatedAt, &data)
+	err := prepStmts.lookup.QueryRow(id).Scan(&e.ID, &e.EventType, &e.Context, &e.OriginalAccountID, &data, &e.CreatedAt)
 	if err != nil {
 		return Event{}, err
 	}
@@ -71,7 +74,7 @@ func lookup(id string) (Event, error) {
 }
 
 func (e *Event) insert() error {
-	err := prepStmts.insert.QueryRow(e.EventType, e.Context, e.OriginalAccountID).Scan(&e.ID)
+	err := prepStmts.insert.QueryRow(e.EventType, e.Context, e.OriginalAccountID.String()).Scan(&e.ID)
 
 	return err
 }
@@ -79,9 +82,13 @@ func (e *Event) insert() error {
 func prepareStatements() error {
 	var err error
 
-	prepStmts.lookup, err = myDB.Prepare(`SELECT * FROM events
-      WHERE id = $1
-    `)
+	prepStmts.list, err = myDB.Prepare(`SELECT * FROM events`)
+
+	if err != nil {
+		return err
+	}
+
+	prepStmts.lookup, err = myDB.Prepare(`SELECT * FROM events WHERE id = $1`)
 
 	if err != nil {
 		return err

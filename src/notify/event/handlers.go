@@ -9,6 +9,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// Index returns a JSON array of all events
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	events, err := list()
 	if err != nil {
@@ -19,6 +20,7 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	jsonUtils.Output(w, 200, events)
 }
 
+// Create constructs a new event from the data in the POST body
 func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	e := Event{}
 
@@ -38,6 +40,7 @@ func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	jsonUtils.Output(w, 201, e)
 }
 
+// Show returns the data for a speciic event as JSON
 func Show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	e, err := lookup(ps.ByName("id"))
 	if err != nil {
