@@ -14,7 +14,7 @@ func CreateDB(db *sql.DB) error {
 	_, err := myDB.Exec(`
               CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
               CREATE TABLE IF NOT EXISTS events (
-                id UUID PRIMARY KEY,
+                id UUID PRIMARY KEY NOT NULL,
                 event_type VARCHAR(64),
                 context VARCHAR(64),
                 original_account_id VARCHAR(64),
@@ -70,8 +70,8 @@ func lookup(id string) (Event, error) {
 	return e, err
 }
 
-func (e Event) insert() error {
-	_, err := prepStmts.insert.Exec(e.EventType, e.Context, e.OriginalAccountID)
+func (e *Event) insert() error {
+	err := prepStmts.insert.QueryRow(e.EventType, e.Context, e.OriginalAccountID).Scan(&e.ID)
 
 	return err
 }
@@ -88,12 +88,13 @@ func prepareStatements() error {
 	}
 
 	prepStmts.insert, err = myDB.Prepare(`INSERT INTO events
-    ( id,
-      event_type,
-      context,
-      original_account_id
-      )
-    VALUES ( uuid_generate_v4(), $1, $2, $3 )
+		( id,
+			event_type,
+			context,
+			original_account_id
+		)
+		VALUES ( uuid_generate_v4(), $1, $2, $3 )
+		RETURNING id
   `)
 
 	return err
