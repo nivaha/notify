@@ -20,7 +20,7 @@ func CreateDB(db *sql.DB) error {
                 id UUID PRIMARY KEY,
                 event_type VARCHAR(64),
                 context VARCHAR(64),
-                original_account_id VARCHAR(64),
+                account_id VARCHAR(64),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
               `)
 	if err != nil {
@@ -42,7 +42,7 @@ func get(id string) (Subscription, error) {
 	defer rows.Close()
 
 	if rows.Next() {
-		err := rows.Scan(&subscription.ID, &subscription.EventType, &subscription.Context, &subscription.OriginalAccountID, &subscription.CreatedAt)
+		err := scan(rows, &subscription)
 		if err != nil {
 			return subscription, err
 		}
@@ -64,7 +64,7 @@ func list() ([]Subscription, error) {
 	for rows.Next() {
 		var subscription Subscription
 
-		err := rows.Scan(&subscription.ID, &subscription.EventType, &subscription.Context, &subscription.OriginalAccountID, &subscription.CreatedAt)
+		err := scan(rows, &subscription)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func list() ([]Subscription, error) {
 }
 
 func (subscription Subscription) insert() error {
-	_, err := prepStmts.insert.Exec(subscription.EventType, subscription.Context, subscription.OriginalAccountID)
+	_, err := prepStmts.insert.Exec(subscription.EventType, subscription.Context, subscription.AccountID)
 
 	return err
 }
@@ -92,6 +92,10 @@ func destroy(id string) (Subscription, error) {
 	return subscription, err
 }
 
+func scan(rows *sql.Rows, subscription *Subscription) error {
+	return rows.Scan(&subscription.ID, &subscription.EventType, &subscription.Context, &subscription.AccountID, &subscription.CreatedAt)
+}
+
 func prepareStatements() error {
 	var err error
 
@@ -100,7 +104,7 @@ func prepareStatements() error {
     ( id,
       event_type,
       context,
-      original_account_id
+      account_id
     )
     VALUES ( uuid_generate_v4(), $1, $2, $3 )
   `)
