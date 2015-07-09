@@ -1,12 +1,16 @@
 package event
 
-import "time"
+import (
+	"time"
+
+	uuid "github.com/satori/go.uuid"
+)
 
 type Event struct {
-	ID                string    `json:"id"`
+	ID                uuid.UUID `json:"id"`
 	EventType         string    `json:"event_type"`
 	Context           string    `json:"context"`
-	OriginalAccountID string    `json:"original_account_id"`
-	CreatedAt         time.Time `json:"timestamp"`
+	OriginalAccountID uuid.UUID `json:"original_account_id"`
 	Data              string    `json:"payload"`
+	CreatedAt         time.Time `json:"timestamp"`
 }

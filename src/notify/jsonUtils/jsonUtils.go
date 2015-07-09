@@ -10,6 +10,7 @@ type jsonError struct {
 	Message    string `json:"message"`
 }
 
+// Output takes data, marshals it into JSON and writes it out to the http.ResponseWriter
 func Output(w http.ResponseWriter, httpStatus int, data interface{}) {
 	eJSON, err := json.Marshal(data)
 	if err != nil {
@@ -22,6 +23,7 @@ func Output(w http.ResponseWriter, httpStatus int, data interface{}) {
 	w.Write(eJSON)
 }
 
+// Error takes an error string and writes it out to the http.ResponseWriter
 func Error(w http.ResponseWriter, httpStatus int, errorStr string) {
 	data := jsonError{httpStatus, errorStr}
 

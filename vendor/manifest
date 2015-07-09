@@ -12,6 +12,12 @@
 			"repository": "https://github.com/julienschmidt/httprouter",
 			"revision": "70708e46004c7bcb09b70e685a8b74a690135387",
 			"branch": "master"
+		},
+		{
+			"importpath": "github.com/satori/go.uuid",
+			"repository": "https://github.com/satori/go.uuid",
+			"revision": "afe1e2ddf0f05b7c29d388a3f8e76cb15c2231ca",
+			"branch": "master"
 		}
 	]
 }
