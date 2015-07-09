@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"notify/event"
+	"notify/subscription"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -30,6 +30,11 @@ func Setup(db *sql.DB) {
 	router.GET("/events", event.Index)
 	router.POST("/event", event.Create)
 	router.GET("/event/:id", event.Show)
+
+	router.POST("/subscriptions", subscription.Create)
+	router.GET("/subscriptions", subscription.Index)
+	router.GET("/subscriptions/:id", subscription.Show)
+	router.DELETE("/subscriptions/:id", subscription.Destroy)
 }
 
 func Start(port int) {
