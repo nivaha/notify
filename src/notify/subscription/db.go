@@ -77,7 +77,7 @@ func list() ([]Subscription, error) {
 }
 
 func (subscription *Subscription) insert() error {
-	err := prepStmts.insert.QueryRow(subscription.EventType, subscription.Context, subscription.AccountID).Scan(&subscription.ID, &subscription.CreatedAt)
+	err := prepStmts.insert.QueryRow(subscription.EventType, subscription.Context, subscription.AccountID.String()).Scan(&subscription.ID, &subscription.CreatedAt)
 
 	return err
 }
