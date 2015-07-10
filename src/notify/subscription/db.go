@@ -14,26 +14,26 @@ var prepStmts struct {
 func CreateDB(db *sql.DB) error {
 	myDB = db
 
-	_, err := myDB.Exec(`
-              CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-              CREATE TABLE IF NOT EXISTS subscriptions (
-                id UUID PRIMARY KEY,
-                event_type VARCHAR(64),
-                context VARCHAR(64),
-                account_id UUID,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
-              `)
-	if err != nil {
+	if _, err := myDB.Exec(`
+      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id UUID PRIMARY KEY,
+        event_type VARCHAR(64),
+        context VARCHAR(64),
+        account_id UUID,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
+    `); err != nil {
 		return err
 	}
 
-	err = prepareStatements()
+	err := prepareStatements()
 
 	return err
 }
 
 func get(id string) (Subscription, error) {
 	var subscription Subscription
+
 	rows, err := prepStmts.get.Query(id)
 	if err != nil {
 		return subscription, err
@@ -42,8 +42,7 @@ func get(id string) (Subscription, error) {
 	defer rows.Close()
 
 	if rows.Next() {
-		err := scan(rows, &subscription)
-		if err != nil {
+		if err := scan(rows, &subscription); err != nil {
 			return subscription, err
 		}
 	}
@@ -64,8 +63,7 @@ func list() ([]Subscription, error) {
 	for rows.Next() {
 		var subscription Subscription
 
-		err := scan(rows, &subscription)
-		if err != nil {
+		if err := scan(rows, &subscription); err != nil {
 			return nil, err
 		}
 
@@ -99,40 +97,38 @@ func scan(rows *sql.Rows, subscription *Subscription) error {
 func prepareStatements() error {
 	var err error
 
-	prepStmts.insert, err = myDB.Prepare(`
-		INSERT INTO subscriptions
-    ( id,
-      event_type,
-      context,
-      account_id
-    )
-    VALUES ( uuid_generate_v4(), $1, $2, $3 )
-		RETURNING id, created_at
-  `)
-	if err != nil {
+	if prepStmts.insert, err = myDB.Prepare(`
+			INSERT INTO subscriptions
+	    ( id,
+	      event_type,
+	      context,
+	      account_id
+	    )
+	    VALUES ( uuid_generate_v4(), $1, $2, $3 )
+			RETURNING id, created_at
+	  `); err != nil {
 		return err
 	}
-
-	prepStmts.destroy, err = myDB.Prepare(`
-		DELETE
-		FROM subscriptions
-    WHERE id = $1
-  `)
-	if err != nil {
+	if prepStmts.destroy, err = myDB.Prepare(`
+			DELETE
+			FROM subscriptions
+	    WHERE id = $1
+	  `); err != nil {
 		return err
 	}
-	prepStmts.get, err = myDB.Prepare(`
-		SELECT *
-		FROM subscriptions
-    WHERE id = $1
-  `)
-	if err != nil {
+	if prepStmts.get, err = myDB.Prepare(`
+			SELECT *
+			FROM subscriptions
+	    WHERE id = $1
+	  `); err != nil {
 		return err
 	}
-	prepStmts.list, err = myDB.Prepare(`
-		SELECT *
-		FROM subscriptions
-  `)
+	if prepStmts.list, err = myDB.Prepare(`
+			SELECT *
+			FROM subscriptions
+  	`); err != nil {
+		return err
+	}
 
 	return err
 }
