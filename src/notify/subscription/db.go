@@ -1,6 +1,9 @@
 package subscription
 
-import "database/sql"
+import (
+	"database/sql"
+	"errors"
+)
 
 var myDB *sql.DB
 var prepStmts struct {
@@ -14,15 +17,7 @@ var prepStmts struct {
 func CreateDB(db *sql.DB) error {
 	myDB = db
 
-	if _, err := myDB.Exec(`
-      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-      CREATE TABLE IF NOT EXISTS subscriptions (
-        id UUID PRIMARY KEY,
-        event_type VARCHAR(64),
-        context VARCHAR(64),
-        account_id UUID,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
-    `); err != nil {
+	if _, err := myDB.Exec(sqlSchema); err != nil {
 		return err
 	}
 
@@ -47,7 +42,7 @@ func get(id string) (Subscription, error) {
 		}
 	}
 
-	return subscription, nil
+	return subscription, errors.New("No subscription found")
 }
 
 func list() ([]Subscription, error) {
@@ -97,36 +92,16 @@ func scan(rows *sql.Rows, subscription *Subscription) error {
 func prepareStatements() error {
 	var err error
 
-	if prepStmts.insert, err = myDB.Prepare(`
-			INSERT INTO subscriptions
-	    ( id,
-	      event_type,
-	      context,
-	      account_id
-	    )
-	    VALUES ( uuid_generate_v4(), $1, $2, $3 )
-			RETURNING id, created_at
-	  `); err != nil {
+	if prepStmts.insert, err = myDB.Prepare(sqlInsert); err != nil {
 		return err
 	}
-	if prepStmts.destroy, err = myDB.Prepare(`
-			DELETE
-			FROM subscriptions
-	    WHERE id = $1
-	  `); err != nil {
+	if prepStmts.destroy, err = myDB.Prepare(sqlDestroy); err != nil {
 		return err
 	}
-	if prepStmts.get, err = myDB.Prepare(`
-			SELECT *
-			FROM subscriptions
-	    WHERE id = $1
-	  `); err != nil {
+	if prepStmts.get, err = myDB.Prepare(sqlRetrieve); err != nil {
 		return err
 	}
-	if prepStmts.list, err = myDB.Prepare(`
-			SELECT *
-			FROM subscriptions
-  	`); err != nil {
+	if prepStmts.list, err = myDB.Prepare(sqlList); err != nil {
 		return err
 	}
 
