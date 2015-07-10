@@ -1,4 +1,4 @@
-package event
+package feed
 
 import (
 	"encoding/json"
@@ -9,44 +9,44 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// Index returns a JSON array of all events
+// Index returns a JSON array of all feeds
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	events, err := list()
+	feeds, err := list()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	jsonUtils.Output(w, 200, events)
+	jsonUtils.Output(w, 200, feeds)
 }
 
-// Create constructs a new event from the data in the POST body
+// Create constructs a new feed from the data in the POST body
 func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	e := Event{}
+	f := Feed{}
 
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&e)
+	err := decoder.Decode(&f)
 	if err != nil {
 		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = e.insert()
+	err = f.insert()
 	if err != nil {
 		jsonUtils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	jsonUtils.Output(w, 201, e)
+	jsonUtils.Output(w, 201, f)
 }
 
-// Show returns the data for a specific event as JSON
+// Show returns the data for a specific feed as JSON
 func Show(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	e, err := lookup(ps.ByName("id"))
+	f, err := lookup(ps.ByName("id"))
 	if err != nil {
 		jsonUtils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	jsonUtils.Output(w, 200, e)
+	jsonUtils.Output(w, 200, f)
 }

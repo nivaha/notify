@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"notify/event"
+	"notify/feed"
 	"notify/router"
 	"notify/subscription"
 )
@@ -35,6 +36,7 @@ func main() {
 	defer dbClose()
 
 	fatalIfError(event.CreateDB(db))
+	fatalIfError(feed.CreateDB(db))
 	fatalIfError(subscription.CreateDB(db))
 
 	router.Setup(db)
