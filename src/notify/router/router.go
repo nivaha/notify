@@ -13,23 +13,15 @@ import (
 
 var router *httprouter.Router
 
-func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome to Nivaha Notify\n")
-}
-
-func hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "Hey, %s!\n", ps.ByName("name"))
-}
-
 func Setup(db *sql.DB) {
 	router = httprouter.New()
 
 	router.GET("/", index)
-	router.GET("/hello/:name", hello)
+	router.GET("/status", status)
 
+	router.POST("/events", event.Create)
 	router.GET("/events", event.Index)
-	router.POST("/event", event.Create)
-	router.GET("/event/:id", event.Show)
+	router.GET("/events/:id", event.Show)
 
 	router.POST("/subscriptions", subscription.Create)
 	router.GET("/subscriptions", subscription.Index)
