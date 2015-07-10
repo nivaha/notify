@@ -1,12 +1,16 @@
 package subscription
 
-import "time"
+import (
+	"time"
+
+	uuid "github.com/satori/go.uuid"
+)
 
 // Subscription is a structure that matches the json content for REST calls
 type Subscription struct {
-	ID        string    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	EventType string    `json:"event_type"`
 	Context   string    `json:"context"`
-	AccountID string    `json:"account_id"`
+	AccountID uuid.UUID `json:"account_id"`
 	CreatedAt time.Time `json:"timestamp"`
 }
