@@ -39,6 +39,6 @@ func main() {
 	fatalIfError(feed.CreateDB(db))
 	fatalIfError(subscription.CreateDB(db))
 
-	router.Setup(db)
+	router.Setup()
 	router.Start(clOptions.httpPort)
 }
