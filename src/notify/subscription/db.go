@@ -1,9 +1,6 @@
 package subscription
 
-import (
-	"database/sql"
-	"errors"
-)
+import "database/sql"
 
 var myDB *sql.DB
 var prepStmts struct {
@@ -27,22 +24,15 @@ func CreateDB(db *sql.DB) error {
 }
 
 func get(id string) (Subscription, error) {
-	var subscription Subscription
+	var sub Subscription
 
-	rows, err := prepStmts.get.Query(id)
+	err := prepStmts.get.QueryRow(id).Scan(&sub.ID, &sub.EventType, &sub.Context, &sub.AccountID, &sub.CreatedAt)
+
 	if err != nil {
-		return subscription, err
+		return Subscription{}, err
 	}
 
-	defer rows.Close()
-
-	if rows.Next() {
-		if err := scan(rows, &subscription); err != nil {
-			return subscription, err
-		}
-	}
-
-	return subscription, errors.New("No subscription found")
+	return sub, err
 }
 
 func list() ([]Subscription, error) {
@@ -53,40 +43,40 @@ func list() ([]Subscription, error) {
 	}
 	defer rows.Close()
 
-	subscriptions := []Subscription{}
+	subs := []Subscription{}
 
 	for rows.Next() {
-		var subscription Subscription
+		var sub Subscription
 
-		if err := scan(rows, &subscription); err != nil {
+		if err := scan(rows, &sub); err != nil {
 			return nil, err
 		}
 
-		subscriptions = append(subscriptions, subscription)
+		subs = append(subs, sub)
 	}
 
 	err = rows.Err()
-	return subscriptions, err
+	return subs, err
 }
 
-func (subscription *Subscription) insert() error {
-	err := prepStmts.insert.QueryRow(subscription.EventType, subscription.Context, subscription.AccountID.String()).Scan(&subscription.ID, &subscription.CreatedAt)
+func (sub *Subscription) insert() error {
+	err := prepStmts.insert.QueryRow(sub.EventType, sub.Context, sub.AccountID.String()).Scan(&sub.ID, &sub.CreatedAt)
 
 	return err
 }
 
 func destroy(id string) (Subscription, error) {
-	subscription, err := get(id)
+	sub, err := get(id)
 	if err != nil {
-		return subscription, err
+		return sub, err
 	}
 
 	_, err = prepStmts.destroy.Query(id)
-	return subscription, err
+	return sub, err
 }
 
-func scan(rows *sql.Rows, subscription *Subscription) error {
-	return rows.Scan(&subscription.ID, &subscription.EventType, &subscription.Context, &subscription.AccountID, &subscription.CreatedAt)
+func scan(rows *sql.Rows, sub *Subscription) error {
+	return rows.Scan(&sub.ID, &sub.EventType, &sub.Context, &sub.AccountID, &sub.CreatedAt)
 }
 
 func prepareStatements() error {
