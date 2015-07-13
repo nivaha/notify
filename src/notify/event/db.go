@@ -35,7 +35,6 @@ func CreateDB(db *sql.DB) error {
 
 func list() ([]Event, error) {
 	rows, err := prepStmts.list.Query()
-
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +55,7 @@ func list() ([]Event, error) {
 		events = append(events, e)
 	}
 
-	err = rows.Err()
-	return events, err
+	return events, rows.Err()
 }
 
 func lookup(id string) (Event, error) {
@@ -70,13 +68,11 @@ func lookup(id string) (Event, error) {
 	}
 	e.Data = data
 
-	return e, err
+	return e, nil
 }
 
 func (e *Event) insert() error {
-	err := prepStmts.insert.QueryRow(e.EventType, e.Context, e.OriginalAccountID.String()).Scan(&e.ID)
-
-	return err
+	return prepStmts.insert.QueryRow(e.EventType, e.Context, e.OriginalAccountID.String()).Scan(&e.ID)
 }
 
 func prepareStatements() error {
