@@ -14,41 +14,25 @@ var prepStmts struct {
 func CreateDB(db *sql.DB) error {
 	myDB = db
 
-	_, err := myDB.Exec(`
-              CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-              CREATE TABLE IF NOT EXISTS subscriptions (
-                id UUID PRIMARY KEY,
-                event_type VARCHAR(64),
-                context VARCHAR(64),
-                account_id UUID,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP )
-              `)
-	if err != nil {
+	if _, err := myDB.Exec(sqlSchema); err != nil {
 		return err
 	}
 
-	err = prepareStatements()
+	err := prepareStatements()
 
 	return err
 }
 
 func get(id string) (Subscription, error) {
-	var subscription Subscription
-	rows, err := prepStmts.get.Query(id)
+	var sub Subscription
+
+	err := prepStmts.get.QueryRow(id).Scan(&sub.ID, &sub.EventType, &sub.Context, &sub.AccountID, &sub.CreatedAt)
+
 	if err != nil {
-		return subscription, err
+		return Subscription{}, err
 	}
 
-	defer rows.Close()
-
-	if rows.Next() {
-		err := scan(rows, &subscription)
-		if err != nil {
-			return subscription, err
-		}
-	}
-
-	return subscription, nil
+	return sub, err
 }
 
 func list() ([]Subscription, error) {
@@ -59,80 +43,57 @@ func list() ([]Subscription, error) {
 	}
 	defer rows.Close()
 
-	subscriptions := []Subscription{}
+	subs := []Subscription{}
 
 	for rows.Next() {
-		var subscription Subscription
+		var sub Subscription
 
-		err := scan(rows, &subscription)
-		if err != nil {
+		if err := scan(rows, &sub); err != nil {
 			return nil, err
 		}
 
-		subscriptions = append(subscriptions, subscription)
+		subs = append(subs, sub)
 	}
 
 	err = rows.Err()
-	return subscriptions, err
+	return subs, err
 }
 
-func (subscription *Subscription) insert() error {
-	err := prepStmts.insert.QueryRow(subscription.EventType, subscription.Context, subscription.AccountID.String()).Scan(&subscription.ID, &subscription.CreatedAt)
+func (sub *Subscription) insert() error {
+	err := prepStmts.insert.QueryRow(sub.EventType, sub.Context, sub.AccountID.String()).Scan(&sub.ID, &sub.CreatedAt)
 
 	return err
 }
 
 func destroy(id string) (Subscription, error) {
-	subscription, err := get(id)
+	sub, err := get(id)
 	if err != nil {
-		return subscription, err
+		return sub, err
 	}
 
 	_, err = prepStmts.destroy.Query(id)
-	return subscription, err
+	return sub, err
 }
 
-func scan(rows *sql.Rows, subscription *Subscription) error {
-	return rows.Scan(&subscription.ID, &subscription.EventType, &subscription.Context, &subscription.AccountID, &subscription.CreatedAt)
+func scan(rows *sql.Rows, sub *Subscription) error {
+	return rows.Scan(&sub.ID, &sub.EventType, &sub.Context, &sub.AccountID, &sub.CreatedAt)
 }
 
 func prepareStatements() error {
 	var err error
 
-	prepStmts.insert, err = myDB.Prepare(`
-		INSERT INTO subscriptions
-    ( id,
-      event_type,
-      context,
-      account_id
-    )
-    VALUES ( uuid_generate_v4(), $1, $2, $3 )
-		RETURNING id, created_at
-  `)
-	if err != nil {
+	if prepStmts.insert, err = myDB.Prepare(sqlInsert); err != nil {
 		return err
 	}
-
-	prepStmts.destroy, err = myDB.Prepare(`
-		DELETE
-		FROM subscriptions
-    WHERE id = $1
-  `)
-	if err != nil {
+	if prepStmts.destroy, err = myDB.Prepare(sqlDestroy); err != nil {
 		return err
 	}
-	prepStmts.get, err = myDB.Prepare(`
-		SELECT *
-		FROM subscriptions
-    WHERE id = $1
-  `)
-	if err != nil {
+	if prepStmts.get, err = myDB.Prepare(sqlRetrieve); err != nil {
 		return err
 	}
-	prepStmts.list, err = myDB.Prepare(`
-		SELECT *
-		FROM subscriptions
-  `)
+	if prepStmts.list, err = myDB.Prepare(sqlList); err != nil {
+		return err
+	}
 
 	return err
 }

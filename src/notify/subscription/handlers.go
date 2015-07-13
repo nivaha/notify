@@ -1,7 +1,6 @@
 package subscription
 
 import (
-	"encoding/json"
 	"net/http"
 	"notify/jsonUtils"
 
@@ -12,15 +11,12 @@ import (
 func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	subscription := Subscription{}
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&subscription)
-	if err != nil {
+	if err := jsonUtils.Decode(r.Body, &subscription); err != nil {
 		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = subscription.insert()
-	if err != nil {
+	if err := subscription.insert(); err != nil {
 		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}

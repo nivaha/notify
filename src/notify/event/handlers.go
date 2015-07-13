@@ -1,7 +1,6 @@
 package event
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"notify/jsonUtils"
@@ -24,15 +23,12 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	e := Event{}
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&e)
-	if err != nil {
+	if err := jsonUtils.Decode(r.Body, &e); err != nil {
 		jsonUtils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = e.insert()
-	if err != nil {
+	if err := e.insert(); err != nil {
 		jsonUtils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}

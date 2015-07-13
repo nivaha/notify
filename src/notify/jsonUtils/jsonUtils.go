@@ -2,6 +2,7 @@ package jsonUtils
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 )
 
@@ -21,6 +22,12 @@ func Output(w http.ResponseWriter, httpStatus int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
 	w.Write(eJSON)
+}
+
+func Decode(body io.Reader, s interface{}) error {
+	decoder := json.NewDecoder(body)
+	err := decoder.Decode(&s)
+	return err
 }
 
 // Error takes an error string and writes it out to the http.ResponseWriter
