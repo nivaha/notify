@@ -1,7 +1,6 @@
 package router
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 var router *httprouter.Router
 
 // Setup creates a router and sets up all the routes
-func Setup(db *sql.DB) {
+func Setup() {
 	router = httprouter.New()
 
 	router.GET("/", index)
