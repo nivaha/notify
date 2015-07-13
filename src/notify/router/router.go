@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
 	"notify/event"
+	"notify/feed"
 	"notify/subscription"
 
 	"github.com/julienschmidt/httprouter"
@@ -13,6 +15,7 @@ import (
 
 var router *httprouter.Router
 
+// Setup creates a router and sets up all the routes
 func Setup(db *sql.DB) {
 	router = httprouter.New()
 
@@ -27,8 +30,13 @@ func Setup(db *sql.DB) {
 	router.GET("/subscriptions", subscription.Index)
 	router.GET("/subscriptions/:id", subscription.Show)
 	router.DELETE("/subscriptions/:id", subscription.Destroy)
+
+	router.POST("/feeds", feed.Create)
+	router.GET("/feeds", feed.Index)
+	router.GET("/feeds/:id", feed.Show)
 }
 
+// Start listens on a port and serves data
 func Start(port int) {
 	log.Printf("Listening on port %v", port)
 

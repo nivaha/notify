@@ -1,0 +1,7 @@
+machine:
+  pre:
+    - go get github.com/constabulary/gb/...
+
+test:
+  override:
+    - gb test

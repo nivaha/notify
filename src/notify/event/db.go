@@ -83,13 +83,11 @@ func prepareStatements() error {
 	var err error
 
 	prepStmts.list, err = myDB.Prepare(`SELECT * FROM events`)
-
 	if err != nil {
 		return err
 	}
 
 	prepStmts.lookup, err = myDB.Prepare(`SELECT * FROM events WHERE id = $1`)
-
 	if err != nil {
 		return err
 	}
