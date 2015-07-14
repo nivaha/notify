@@ -25,10 +25,11 @@ func Setup() {
 	router.GET("/events", event.Index)
 	router.GET("/events/:id", event.Show)
 
-	router.POST("/subscriptions", subscription.Create)
-	router.GET("/subscriptions", subscription.Index)
-	router.GET("/subscriptions/:id", subscription.Show)
-	router.DELETE("/subscriptions/:id", subscription.Destroy)
+	sHandler := subscription.NewHandler()
+	router.POST("/subscriptions", sHandler.Create)
+	router.GET("/subscriptions", sHandler.Index)
+	router.GET("/subscriptions/:id", sHandler.Show)
+	router.DELETE("/subscriptions/:id", sHandler.Destroy)
 
 	router.POST("/feeds", feed.Create)
 	router.GET("/feeds", feed.Index)

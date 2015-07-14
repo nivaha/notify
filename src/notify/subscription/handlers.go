@@ -7,8 +7,20 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type Handler struct {
+	db Persist
+}
+
+func NewHandler() *Handler {
+	h := Handler{
+		db: Persistance{},
+	}
+
+	return &h
+}
+
 // Create is a REST API for creating a new subscription, based on the JSON payload
-func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	subscription := Subscription{}
 
 	if err := jsonUtils.Decode(r.Body, &subscription); err != nil {
@@ -25,8 +37,8 @@ func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 // Index is a REST API for listing all registered subscriptions
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	subscriptions, err := list()
+func (h *Handler) Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	subscriptions, err := h.db.list()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -36,8 +48,8 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 // Show is a REST API for listing a single subscription, found by id
-func Show(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	subscription, err := get(p.ByName("id"))
+func (h *Handler) Show(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	subscription, err := h.db.get(p.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -47,8 +59,8 @@ func Show(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 // Destroy is a REST API for destroying an subscription, based on the subscription id
-func Destroy(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	subscription, err := destroy(p.ByName("id"))
+func (h *Handler) Destroy(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	subscription, err := h.db.destroy(p.ByName("id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
