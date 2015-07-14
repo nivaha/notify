@@ -2,6 +2,13 @@ package subscription
 
 import "database/sql"
 
+type Persistance struct{}
+type Persist interface {
+	get(id string) (Subscription, error)
+	list() ([]Subscription, error)
+	destroy(id string) (Subscription, error)
+}
+
 var myDB *sql.DB
 var prepStmts struct {
 	insert  *sql.Stmt
@@ -23,7 +30,7 @@ func CreateDB(db *sql.DB) error {
 	return err
 }
 
-func get(id string) (Subscription, error) {
+func (p Persistance) get(id string) (Subscription, error) {
 	var sub Subscription
 
 	err := prepStmts.get.QueryRow(id).Scan(&sub.ID, &sub.EventType, &sub.Context, &sub.AccountID, &sub.CreatedAt)
@@ -35,7 +42,7 @@ func get(id string) (Subscription, error) {
 	return sub, err
 }
 
-func list() ([]Subscription, error) {
+func (p Persistance) list() ([]Subscription, error) {
 	rows, err := prepStmts.list.Query()
 
 	if err != nil {
@@ -65,8 +72,8 @@ func (sub *Subscription) insert() error {
 	return err
 }
 
-func destroy(id string) (Subscription, error) {
-	sub, err := get(id)
+func (p Persistance) destroy(id string) (Subscription, error) {
+	sub, err := p.get(id)
 	if err != nil {
 		return sub, err
 	}
