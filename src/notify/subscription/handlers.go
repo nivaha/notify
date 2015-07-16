@@ -8,12 +8,12 @@ import (
 )
 
 type Handler struct {
-	db Persist
+	db Database
 }
 
 func NewHandler() *Handler {
 	h := Handler{
-		db: Persistance{},
+		db: PgDatabase{},
 	}
 
 	return &h

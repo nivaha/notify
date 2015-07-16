@@ -2,8 +2,11 @@ package subscription
 
 import "database/sql"
 
-type Persistance struct{}
-type Persist interface {
+// PgDatabase is a structure that implements the Database interface and interacts with Postgres db
+type PgDatabase struct{}
+
+// Database is an interface for retrieving Subscriptions
+type Database interface {
 	get(id string) (Subscription, error)
 	list() ([]Subscription, error)
 	destroy(id string) (Subscription, error)
@@ -30,7 +33,7 @@ func CreateDB(db *sql.DB) error {
 	return err
 }
 
-func (p Persistance) get(id string) (Subscription, error) {
+func (p PgDatabase) get(id string) (Subscription, error) {
 	var sub Subscription
 
 	err := prepStmts.get.QueryRow(id).Scan(&sub.ID, &sub.EventType, &sub.Context, &sub.AccountID, &sub.CreatedAt)
@@ -42,7 +45,7 @@ func (p Persistance) get(id string) (Subscription, error) {
 	return sub, err
 }
 
-func (p Persistance) list() ([]Subscription, error) {
+func (p PgDatabase) list() ([]Subscription, error) {
 	rows, err := prepStmts.list.Query()
 
 	if err != nil {
@@ -72,7 +75,7 @@ func (sub *Subscription) insert() error {
 	return err
 }
 
-func (p Persistance) destroy(id string) (Subscription, error) {
+func (p PgDatabase) destroy(id string) (Subscription, error) {
 	sub, err := p.get(id)
 	if err != nil {
 		return sub, err

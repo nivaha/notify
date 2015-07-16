@@ -11,7 +11,7 @@ import (
 )
 
 // Mock out the Database dependency
-type MockPersistance struct {
+type MockDatabase struct {
 	t     *testing.T
 	getID string
 	s     Subscription
@@ -19,18 +19,23 @@ type MockPersistance struct {
 	err   error
 }
 
-func (p MockPersistance) get(id string) (Subscription, error) {
+func (p MockDatabase) get(id string) (Subscription, error) {
 	if id != p.getID {
 		p.t.Errorf("Got a retrieval id of '%v', but expected '%v'", id, p.getID)
 	}
 	return p.s, p.err
 }
-func (p MockPersistance) list() ([]Subscription, error) {
+func (p MockDatabase) list() ([]Subscription, error) {
 	return p.slist, p.err
 }
-func (p MockPersistance) destroy(id string) (Subscription, error) {
+func (p MockDatabase) destroy(id string) (Subscription, error) {
+	if id != p.getID {
+		p.t.Errorf("Got a retrieval id of '%v', but expected '%v'", id, p.getID)
+	}
 	return p.s, p.err
 }
+
+/* **** Test Cases **** */
 
 // Test that the Index handler properly returns the list of retrieved subscriptions and correct http response code
 func TestIndexHandler(t *testing.T) {
@@ -42,7 +47,7 @@ func TestIndexHandler(t *testing.T) {
 	}
 
 	h := Handler{
-		db: MockPersistance{slist: slist},
+		db: MockDatabase{slist: slist},
 	}
 	req, w := newReqParams("GET")
 
@@ -63,7 +68,7 @@ func TestIndexHandler(t *testing.T) {
 func TestIndexHandlerWithErr(t *testing.T) {
 	errMsg := "Bad things happened"
 	h := Handler{
-		db: MockPersistance{err: errors.New(errMsg)},
+		db: MockDatabase{err: errors.New(errMsg)},
 	}
 	req, w := newReqParams("GET")
 
@@ -83,7 +88,7 @@ func TestIndexHandlerWithErr(t *testing.T) {
 func TestShowHandler(t *testing.T) {
 	id := "c79c54de-39ae-46b0-90e5-9f84c77f6974"
 	params := httprouter.Params{
-		httprouter.Param{"id", id},
+		httprouter.Param{Key: "id", Value: id},
 	}
 	s := Subscription{
 		EventType: "test_type",
@@ -91,7 +96,7 @@ func TestShowHandler(t *testing.T) {
 	}
 
 	h := Handler{
-		db: MockPersistance{
+		db: MockDatabase{
 			s:     s,
 			getID: id,
 		},
@@ -117,10 +122,10 @@ func TestShowHandlerWithErr(t *testing.T) {
 	errMsg := "Bad things happened"
 	id := "c79c54de-39ae-46b0-90e5-9f84c77f6974"
 	params := httprouter.Params{
-		httprouter.Param{"id", id},
+		httprouter.Param{Key: "id", Value: id},
 	}
 	h := Handler{
-		db: MockPersistance{
+		db: MockDatabase{
 			err:   errors.New(errMsg),
 			getID: id,
 		},
@@ -137,6 +142,46 @@ func TestShowHandlerWithErr(t *testing.T) {
 		{"Response body contains error message", strings.Contains(w.Body.String(), errMsg), true},
 	}
 
+	testCases(t, cases)
+}
+
+// Test that the Destroy handler will attempt to remove the record matching
+func TestDestroyHandler(t *testing.T) {
+	id := "c79c54de-39ae-46b0-90e5-9f84c77f6974"
+	params := httprouter.Params{
+		httprouter.Param{Key: "id", Value: id},
+	}
+	s := Subscription{
+		EventType: "test_type",
+		Context:   "test_context",
+	}
+
+	h := Handler{
+		db: MockDatabase{
+			s:     s,
+			getID: id,
+		},
+	}
+
+	req, w := newReqParams("GET")
+
+	h.Destroy(w, req, params)
+
+	cases := []struct {
+		label, actual, expected interface{}
+	}{
+		{"Response code", w.Code, 200},
+		{"Response body contains context", strings.Contains(w.Body.String(), s.Context), true},
+		{"Response body contains event type", strings.Contains(w.Body.String(), s.EventType), true},
+	}
+	h.Index(w, req, httprouter.Params{})
+
+	testCases(t, cases)
+	cases = []struct {
+		label, actual, expected interface{}
+	}{
+		{"Response body doesn't contain the id", strings.Contains(w.Body.String(), id), false},
+	}
 	testCases(t, cases)
 }
 
