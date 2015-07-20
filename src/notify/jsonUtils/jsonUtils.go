@@ -24,6 +24,7 @@ func Output(w http.ResponseWriter, httpStatus int, data interface{}) {
 	w.Write(eJSON)
 }
 
+// Decode will try and parse the content of a Reader into the matching interface
 func Decode(body io.Reader, s interface{}) error {
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&s)

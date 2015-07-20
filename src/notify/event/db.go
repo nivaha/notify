@@ -9,6 +9,15 @@ var prepStmts struct {
 	insert *sql.Stmt
 }
 
+// PgDatabase is a structure that implements the Database interface and interacts with Postgres db
+type PgDatabase struct{}
+
+// Database is an interface for retrieving Events
+type Database interface {
+	lookup(id string) (Event, error)
+	list() ([]Event, error)
+}
+
 // CreateDB creates the events table if it does not yet exist
 func CreateDB(db *sql.DB) error {
 	myDB = db
@@ -33,7 +42,7 @@ func CreateDB(db *sql.DB) error {
 	return err
 }
 
-func list() ([]Event, error) {
+func (p PgDatabase) list() ([]Event, error) {
 	rows, err := prepStmts.list.Query()
 	if err != nil {
 		return nil, err
@@ -58,7 +67,7 @@ func list() ([]Event, error) {
 	return events, rows.Err()
 }
 
-func lookup(id string) (Event, error) {
+func (p PgDatabase) lookup(id string) (Event, error) {
 	var e Event
 	var data string
 
